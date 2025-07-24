@@ -1,7 +1,4 @@
-import postTemplate from "./templates/postTemplate.hbs";
-
 // Отримання постів
-
 async function getPosts() {
   try {
     const response = await fetch("http://localhost:3000/blog");
@@ -13,15 +10,38 @@ async function getPosts() {
 }
 
 // Рендер постів
+function createPostsHTML(posts) {
+  return posts
+    .map(
+      (post) => `
+    <div class="post">
+      <h2>${post.title}</h2>
+      <p><strong>Автор:</strong> ${post.blogname}</p>
+      <img src="${post.image}" alt="${post.title}" style="max-width:300px;">
+      <div class="meta">
+        <p class="views">Перегляди: ${post.views}</p>
+        <p class="favorites">Улюблене: ${post.favorites}</p>
+        <p class="comments">Коментарі: ${post.comments}</p>
+        <p class="downloads">Завантаження: ${post.downloads}</p>
+      </div>
+      <div class="user">
+        <img src="${post.userImageURL}" alt="Аватар" style="width:50px; height:50px; border-radius:50%;">
+        <p>User ID: ${post.user_id}</p>
+      </div>
+      <button class="editPostButton" data-id="${post.id}">Редагувати</button>
+      <button class="deletePostButton" data-id="${post.id}">Видалити</button>
+    </div>
+  `
+    )
+    .join("");
+}
 
 function renderPosts(posts) {
   const container = document.getElementById("postsContainer");
-  container.innerHTML = postTemplate({ posts });
+  container.innerHTML = createPostsHTML(posts);
 }
 
-
 // Створення поста
-
 async function createBlogApi(newBlog) {
   const option = {
     method: "POST",
@@ -34,7 +54,6 @@ async function createBlogApi(newBlog) {
 }
 
 // Оновлення поста
-
 async function updatePost(id, updatedPost) {
   try {
     const option = {
@@ -51,7 +70,6 @@ async function updatePost(id, updatedPost) {
 }
 
 // Видалення поста
-
 async function deletePost(id) {
   try {
     const response = await fetch(`http://localhost:3000/blog/${id}`, {
@@ -72,8 +90,7 @@ async function deletePost(id) {
   }
 }
 
-// Старт
-
+// Старт застосунку
 async function startApp() {
   const posts = await getPosts();
   renderPosts(posts);
@@ -82,7 +99,6 @@ async function startApp() {
 startApp();
 
 // Обробка форми створення
-
 const form = document.getElementById("createPostForm");
 
 form.addEventListener("submit", async (e) => {
@@ -91,7 +107,7 @@ form.addEventListener("submit", async (e) => {
   const newBlog = {
     title: document.getElementById("titleInput").value.trim(),
     blogname: document.getElementById("blognameInput").value.trim(),
-    inage: document.getElementById("imageInput").value.trim(),
+    image: document.getElementById("imageInput").value.trim(),
     userImageURL: document.getElementById("avatarInput").value.trim(),
     views: Number(document.getElementById("viewsInput").value),
     favorites: Number(document.getElementById("favoritesInput").value),
@@ -105,15 +121,14 @@ form.addEventListener("submit", async (e) => {
   startApp();
 });
 
-// Обробка кнопок (edit/delete)
-
+// Обробка кнопок (редагування / видалення)
 document.addEventListener("click", async (e) => {
   const target = e.target;
 
   // Редагування
   if (target.classList.contains("editPostButton")) {
     const id = target.dataset.id;
-    const postDiv = target.closest(".post");
+    const postDiv = target.parentElement;
 
     const updatedPost = {
       title: prompt(
@@ -124,7 +139,7 @@ document.addEventListener("click", async (e) => {
         "Ім’я автора:",
         postDiv.querySelector("p").textContent.split(":")[1].trim()
       ),
-      inage: prompt("URL зображення:", postDiv.querySelector("img").src),
+      image: prompt("URL зображення:", postDiv.querySelector("img").src),
       userImageURL: prompt(
         "URL аватарки:",
         postDiv.querySelector(".user img").src
@@ -132,33 +147,25 @@ document.addEventListener("click", async (e) => {
       views: Number(
         prompt(
           "Перегляди:",
-          postDiv
-            .querySelector(".meta")
-            .children[0].textContent.replace(/\D/g, "")
+          postDiv.querySelector(".views").textContent.replace(/\D/g, "")
         )
       ),
       favorites: Number(
         prompt(
           "Улюблене:",
-          postDiv
-            .querySelector(".meta")
-            .children[1].textContent.replace(/\D/g, "")
+          postDiv.querySelector(".favorites").textContent.replace(/\D/g, "")
         )
       ),
       comments: Number(
         prompt(
           "Коментарі:",
-          postDiv
-            .querySelector(".meta")
-            .children[2].textContent.replace(/\D/g, "")
+          postDiv.querySelector(".comments").textContent.replace(/\D/g, "")
         )
       ),
       downloads: Number(
         prompt(
           "Завантаження:",
-          postDiv
-            .querySelector(".meta")
-            .children[3].textContent.replace(/\D/g, "")
+          postDiv.querySelector(".downloads").textContent.replace(/\D/g, "")
         )
       ),
       user_id: Number(
@@ -182,5 +189,3 @@ document.addEventListener("click", async (e) => {
     startApp();
   }
 });
-
-document.getElementById("showBlogButton").addEventListener("click", startApp);
